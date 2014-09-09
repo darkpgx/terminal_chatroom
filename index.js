@@ -4,17 +4,15 @@ var http = require('http');
 var username = '',
     rec_name = '',
     send_msg = '';
-for (var i = 2; i < process.argv.length; i++){
-  send_msg = send_msg + encodeURIComponent(process.argv[i] + ' ');
-};
-console.log(send_msg);
 
-prompt.get(['username', 'Recepient_Name'], function(err, result) {
+prompt.get(['username', 'Recepient_Name', 'Message'], function(err, result) {
   if (err) { return onErr(err); }
   console.log('  Username: ' + result.username);
   console.log('  Recepient name: ' + result.Recepient_Name);
+  console.log('  Message: ' + result.Message);
   username = encodeURIComponent(result.username);
   rec_name = encodeURIComponent(result.rec_name);
+  send_msg = encodeURIComponent(result.Message);
   var options = {
   host: 'localhost',
   port: '8888',

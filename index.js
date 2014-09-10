@@ -6,7 +6,17 @@ var username = '',
     send_msg = '';
 
 if(process.argv[2] == "receive"){
-  console.log("Receive");
+  prompt.get(['username'], function(err, result) {
+    if (err) { return onErr(err); };
+    console.log('  Username: ' + result.username);
+    username = encodeURIComponent(result.username);
+    var options = {
+      host: 'localhost',
+      port: '8888',
+      path: 'receivemessage?username=' + username
+    };
+    http.request(options, print_msg).end();
+  });
 }
 
 else if(process.argv[2] == "send"){
@@ -20,13 +30,8 @@ else if(process.argv[2] == "send"){
     send_msg = encodeURIComponent(result.Message);
     var options = {
       host: 'localhost',
-    port: '8888',
-    path: '/getmessage?username=' + username + '&send_msg=' + send_msg + '&rec_name=' + rec_name
-    };
-    print_msg = function(res){
-      res.on('data', function(res){
-        console.log(res+'');
-      });
+      port: '8888',
+      path: '/getmessage?username=' + username + '&send_msg=' + send_msg + '&rec_name=' + rec_name
     };
     http.request(options, print_msg).end();
   });
@@ -34,6 +39,12 @@ else if(process.argv[2] == "send"){
 else{
   console.log('Please add either send or receive at the end.(e.g "node index.js send")');
 };
+
+function print_msg(res){
+  res.on('data', function(res){
+    console.log(res);
+  });
+}
 
 function onErr(err) {
   console.log(err);

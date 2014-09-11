@@ -1,53 +1,131 @@
+//Starting Message.
+console.log("Starting Terminal Chat");
+
+//The code for terminal chat starts here
+
+//Required modules
+var http = require('http');
 var prompt = require('prompt');
 prompt.start();
-var http = require('http');
+//End required modules
+
+//Set up global vars to strings
 var username = '',
-    rec_name = '',
-    send_msg = '';
+    roomname = '',
+    password = '',
+    host = 'localhost',
+    port = '8888',
+    i = 0;
+//End set up global vars
 
-if(process.argv[2] == "receive"){
-  prompt.get(['username'], function(err, result) {
-    if (err) { return onErr(err); };
-    console.log('  Username: ' + result.username);
-    username = encodeURIComponent(result.username);
-    var options = {
-      host: 'localhost',
-      port: '8888',
-      path: 'receivemessage?username=' + username
-    };
-    http.request(options, print_msg).end();
-  });
-}
-
-else if(process.argv[2] == "send"){
-  prompt.get(['username', 'Recepient_Name', 'Message'], function(err, result) {
-    if (err) { return onErr(err); }
-    console.log('  Username: ' + result.username);
-    console.log('  Recepient name: ' + result.Recepient_Name);
-    console.log('  Message: ' + result.Message);
-    username = encodeURIComponent(result.username);
-    rec_name = encodeURIComponent(result.rec_name);
-    send_msg = encodeURIComponent(result.Message);
-    var options = {
-      host: 'localhost',
-      port: '8888',
-      path: '/getmessage?username=' + username + '&send_msg=' + send_msg + '&rec_name=' + rec_name
-    };
-    http.request(options, print_msg).end();
-  });
-}
-else{
-  console.log('Please add either send or receive at the end.(e.g "node index.js send")');
-};
-
-function print_msg(res){
-  res.on('data', function(res){
-    console.log(res);
-  });
-}
-
+//Error Handler
 function onErr(err) {
   console.log(err);
   return 1;
+};
+//End Error Handler
+
+
+//Prompt for credentials
+prompt.get(['username', 'roomname', 'password'], function (err, result) {
+  if(err) {return onErr(err);};
+  console.log('  username: ' + result.username); //display user entered credentials
+  console.log('  roomname: ' + result.roomname);
+  console.log('  password: ' + result.password);
+  username = encodeURIComponent(result.username); //parse credentials to URI format
+  roomname = encodeURIComponent(result.roomname);
+  password = encodeURIComponent(result.password);
+  var set_interval_path = "/termchat/get?username=" + username + "&roomname=" + roomname + "&password=" + password;
+  var options_for_pool = createOptions(host, port, set_interval_path);
+  
+  //create new room handler
+  if (process.argv[2] == 'create') {
+    var path_create = "/termchat?username=" + username + "&roomname=" + roomname + "&password=" + password;
+    var options_create = createOptions(host, port, path_create);
+    http.request(options_create, create_room).end();
+//    setInterval(function() {http.request(options_for_pool, getchat).end();},1000);
+  }
+  //end create new room handler
+
+  //create Join room Handler
+  else {
+    var path_join = "/termchat/join?username=" + username + "&roomname=" + roomname + "&password=" + password;
+    var options_join = createOptions(host, port, path_join);
+    http.request(options_join, join_room).end();
+    var my_inter = setInterval(function() {http.request(options_for_pool, getchat).end();},1000);
+  };
+  //End Join room Handler
+});
+
+//Required Functions
+
+//Function to create path for request;
+
+var createOptions = function (host, port, path){
+  return {"host": host,
+    "port" : port,
+    "path" : path};
+};
+
+getchat = function(response) {
+  var str = '';
+  response.on('data', function(dat){
+    str += dat;
+  });
+  response.on('end', function(){
+    var arr = JSON.parse(str);
+    for (var j = i; j< arr.length; j++) {
+      console.log("\n" + arr[j]["username"] + ": " + arr[j]["send_msg"]);
+      i = j+1;
+    };
+  });
+};
+
+//chat function that prompts for chat messages one after another until exit entered
+var chat = function (username, password) {
+  prompt.get(['chat'], function (err, result) {
+    if(result.chat == 'exit') {clearInterval(my_inter); return 0;}
+    var send_msg = encodeURIComponent(result.chat);
+    var path_sendchat = "/termchat/chat?username=" + username + "&roomname=" + roomname + "&password=" + password + "&send_msg=" + send_msg;
+    var options_sendchat = createOptions(host, port, path_sendchat);
+    http.request(options_sendchat, send_chat).end();
+  });
+};
+
+//sends chat messages to server
+send_chat = function(response) {
+  var str = '';
+  response.on('data', function (chunk) {
+  });
+  response.on('end', function () {
+    chat(username, password);
+  });
 }
 
+//creates a room then go to chat
+create_room = function(response) {
+  var str = '';
+  response.on('data', function (chunk) {
+    str += chunk;
+  });
+  response.on('end', function () {
+    if(str == "Roomname Exists Already.") {return 0;};
+    chat(username, password);
+  });
+}
+
+//joins a room then go to chat
+join_room = function(response) {
+  var str = '';
+  response.on('data', function(chunk) {
+    str += chunk;
+  });
+  response.on('end', function () {
+    if(str == "Roomname does not exist" || str == "Wrong password") {
+      console.log(str); //error message
+      return 0;
+    };
+    console.log(str); //Join room message
+    chat(username, password);
+  });
+}

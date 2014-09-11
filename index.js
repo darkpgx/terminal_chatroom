@@ -96,19 +96,6 @@ send_chat = function(response) {
   });
 }
 
-//creates a room then go to chat
-create_room = function(response) {
-  var str = '';
-  response.on('data', function (chunk) {
-    str += chunk;
-  });
-  response.on('end', function () {
-    if(str == "Roomname Exists Already.") {console.log(str); clearInterval(my_inter); return 0;};
-    console.log(str);
-    chat(username, password);
-  });
-}
-
 //joins a room then go to chat; if room does not eixist, create a new one
 join_room = function(response) {
   var str = '';
@@ -116,12 +103,7 @@ join_room = function(response) {
     str += chunk;
   });
   response.on('end', function () {
-    if(str == "Roomname does not exist") {
-      console.log(str + ', creating room...');
-      var path_create = "/termchat?username=" + username + "&roomname=" + roomname + "&password=" + password;
-      var options_create = createOptions(host, port, path_create);
-      http.request(options_create, create_room).end();
-    } else if(str == "Wrong password") {
+    if(str == "Wrong password") {
       console.log(str); //error message
       clearInterval(my_inter);
       return 0;

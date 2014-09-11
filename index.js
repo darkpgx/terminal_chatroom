@@ -83,9 +83,11 @@ getchat = function(response) {
 
 //chat function that prompts for chat messages one after another until exit entered
 var chat = function (username, password) {
-  prompt.get(['chat'], function (err, result) {
-    if(result.chat == 'exit') {return 0;}
-    var send_msg = encodeURIComponent(result.chat);
+  prompt.message = '';
+  prompt.delimiter = '';
+  prompt.get(['entering_message'], function (err, result) {
+    if(result.entering_message == 'exit') {return 0};
+    var send_msg = encodeURIComponent(result.entering_message);
     var path_sendchat = "/termchat/chat?username=" + username + "&roomname=" + roomname + "&password=" + password + "&send_msg=" + send_msg;
     var options_sendchat = createOptions(host, port, path_sendchat);
     http.request(options_sendchat, send_chat).end();

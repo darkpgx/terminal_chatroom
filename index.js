@@ -13,8 +13,8 @@ prompt.start();
 var username = '',
     roomname = '',
     password = '',
-    host = 'localhost',
-    port = '8888',
+    host = 'larryschatroom.herokuapp.com',
+    port = '',
     i = 0;
 //End set up global vars
 
@@ -43,7 +43,7 @@ prompt.get(['username', 'roomname', 'password'], function (err, result) {
     var path_create = "/termchat?username=" + username + "&roomname=" + roomname + "&password=" + password;
     var options_create = createOptions(host, port, path_create);
     http.request(options_create, create_room).end();
-//    setInterval(function() {http.request(options_for_pool, getchat).end();},1000);
+    var my_inter = setInterval(function() {http.request(options_for_pool, getchat).end();},1000);
   }
   //end create new room handler
 
@@ -84,7 +84,7 @@ getchat = function(response) {
 //chat function that prompts for chat messages one after another until exit entered
 var chat = function (username, password) {
   prompt.get(['chat'], function (err, result) {
-    if(result.chat == 'exit') {clearInterval(my_inter); return 0;}
+    if(result.chat == 'exit') {return 0;}
     var send_msg = encodeURIComponent(result.chat);
     var path_sendchat = "/termchat/chat?username=" + username + "&roomname=" + roomname + "&password=" + password + "&send_msg=" + send_msg;
     var options_sendchat = createOptions(host, port, path_sendchat);
@@ -109,7 +109,8 @@ create_room = function(response) {
     str += chunk;
   });
   response.on('end', function () {
-    if(str == "Roomname Exists Already.") {return 0;};
+    if(str == "Roomname Exists Already.") {console.log(str); return 0;};
+    console.log(str);
     chat(username, password);
   });
 }

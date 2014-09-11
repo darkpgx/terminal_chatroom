@@ -15,6 +15,7 @@ var username = '',
     password = '',
     host = 'larryschatroom.herokuapp.com',
     port = '',
+    my_inter;
     i = 0;
 //End set up global vars
 
@@ -24,7 +25,6 @@ function onErr(err) {
   return 1;
 };
 //End Error Handler
-
 
 //Prompt for credentials
 prompt.get(['username', 'roomname', 'password'], function (err, result) {
@@ -42,8 +42,9 @@ prompt.get(['username', 'roomname', 'password'], function (err, result) {
   if (process.argv[2] == 'create') {
     var path_create = "/termchat?username=" + username + "&roomname=" + roomname + "&password=" + password;
     var options_create = createOptions(host, port, path_create);
+    //making my_inter global to pass into other functions and stop it when prompt ends
+    my_inter = setInterval(function() {http.request(options_for_pool, getchat).end();},1000);
     http.request(options_create, create_room).end();
-    var my_inter = setInterval(function() {http.request(options_for_pool, getchat).end();},1000);
   }
   //end create new room handler
 
@@ -51,8 +52,9 @@ prompt.get(['username', 'roomname', 'password'], function (err, result) {
   else {
     var path_join = "/termchat/join?username=" + username + "&roomname=" + roomname + "&password=" + password;
     var options_join = createOptions(host, port, path_join);
+    //making my_inter global to pass into other functions and stop it when prompt ends
+    my_inter = setInterval(function() {http.request(options_for_pool, getchat).end();},1000);
     http.request(options_join, join_room).end();
-    var my_inter = setInterval(function() {http.request(options_for_pool, getchat).end();},1000);
   };
   //End Join room Handler
 });
@@ -75,7 +77,7 @@ getchat = function(response) {
   response.on('end', function(){
     var arr = JSON.parse(str);
     for (var j = i; j< arr.length; j++) {
-      console.log("\n" + arr[j]["username"] + ": " + arr[j]["send_msg"]);
+      console.log(' ' + arr[j]["username"] + ": " + arr[j]["send_msg"]);
       i = j+1;
     };
   });
@@ -83,9 +85,11 @@ getchat = function(response) {
 
 //chat function that prompts for chat messages one after another until exit entered
 var chat = function (username, password) {
-  prompt.get(['chat'], function (err, result) {
-    if(result.chat == 'exit') {return 0;}
-    var send_msg = encodeURIComponent(result.chat);
+  prompt.message = '';
+  prompt.delimiter = '';
+  prompt.get([':'], function (err, result) {
+    if(result[':'] == 'exit') {console.log('Exiting chatroom'); clearInterval(my_inter); return 0;};
+    var send_msg = encodeURIComponent(result[':']);
     var path_sendchat = "/termchat/chat?username=" + username + "&roomname=" + roomname + "&password=" + password + "&send_msg=" + send_msg;
     var options_sendchat = createOptions(host, port, path_sendchat);
     http.request(options_sendchat, send_chat).end();
@@ -109,7 +113,7 @@ create_room = function(response) {
     str += chunk;
   });
   response.on('end', function () {
-    if(str == "Roomname Exists Already.") {console.log(str); return 0;};
+    if(str == "Roomname Exists Already.") {console.log(str); clearInterval(my_inter); return 0;};
     console.log(str);
     chat(username, password);
   });
@@ -124,6 +128,7 @@ join_room = function(response) {
   response.on('end', function () {
     if(str == "Roomname does not exist" || str == "Wrong password") {
       console.log(str); //error message
+      clearInterval(my_inter);
       return 0;
     };
     console.log(str); //Join room message

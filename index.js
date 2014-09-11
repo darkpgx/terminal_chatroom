@@ -15,8 +15,8 @@ var username = '',
     password = '',
     host = 'larryschatroom.herokuapp.com',
     port = '',
-    i = 0,
-    interval_end_mark = 0; //set to 0 meaning false
+    my_inter;
+    i = 0;
 //End set up global vars
 
 //Error Handler
@@ -84,7 +84,7 @@ getchat = function(response) {
 };
 
 //chat function that prompts for chat messages one after another until exit entered
-var chat = function (username, password, my_inter) {
+var chat = function (username, password) {
   prompt.message = '';
   prompt.delimiter = '';
   prompt.get([':'], function (err, result) {
@@ -102,7 +102,7 @@ send_chat = function(response) {
   response.on('data', function (chunk) {
   });
   response.on('end', function () {
-    chat(username, password, my_inter);
+    chat(username, password);
   });
 }
 
@@ -115,7 +115,7 @@ create_room = function(response) {
   response.on('end', function () {
     if(str == "Roomname Exists Already.") {console.log(str); clearInterval(my_inter); return 0;};
     console.log(str);
-    chat(username, password, my_inter);
+    chat(username, password);
   });
 }
 
@@ -132,6 +132,6 @@ join_room = function(response) {
       return 0;
     };
     console.log(str); //Join room message
-    chat(username, password, my_inter);
+    chat(username, password);
   });
 }

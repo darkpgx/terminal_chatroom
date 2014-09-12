@@ -8,6 +8,8 @@ var http = require('http');
 var prompt = require('prompt');
 var request = require('request');
 prompt.start();
+var Notification = require('node-notifier');
+var notifier = new Notification();
 //End required modules
 
 //Set up global vars to strings
@@ -16,7 +18,7 @@ var username = '',
     password = '',
     host = 'http://larryschatroom.herokuapp.com',
     my_inter,
-    i = 0;
+    message_counter = 0;
 //End set up global vars
 
 //Error Handler
@@ -52,10 +54,17 @@ getchat = function(err,res,body) {
   if (res.body == "end") {return 0;};
   var arr = res.body;
   if (arr.length < 1) {return 0;}
-  for (var j = i; j< arr.length; j++) {
+  for (var j = message_counter; j< arr.length; j++) {
+    if (arr[j]["username"] !== username && message_counter !== 0){
+      notifier.notify({
+        title: 'My awesome title',
+        message: arr[j]["username"] + ": " + arr[j]["send_msg"],
+        sound: 'Funk'
+      });
+    };
     console.log('' + arr[j]["username"] + ": " + arr[j]["send_msg"]);
-    i = j+1;
   };
+  message_counter = arr.length;
 };
 
 //chat function that prompts for chat messages one after another until exit entered

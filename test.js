@@ -1,11 +1,8 @@
-var request = require('request');
+var Notification = require('node-notifier');
 
-request.post(
-    'http://localhost:8888/testing1',
-    {json: { "roomname" : "1234", "password" : "1234", "username" : "Larry", "send_msg" : "POST is Working"}},
-    function(err, res, body) {
-      if(!err && res.statusCode == 200) {
-        console.log(body);
-      };
-    }
-);
+var notifier = new Notification();
+notifier.notify({
+  title: 'My awesome title',
+  sound: 'Hero',
+  message: 'Hello from node, Mr. User!'
+});

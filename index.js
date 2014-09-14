@@ -60,15 +60,15 @@ getchat = function(err,res,body) {
         message: arr[j]["username"] + ": " + arr[j]["send_msg"],
         sound: 'Funk'
       });
+      console.log('' + arr[j]["username"] + ": " + arr[j]["send_msg"]);
     };
-    console.log('' + arr[j]["username"] + ": " + arr[j]["send_msg"]);
   };
   message_counter = arr.length;
 };
 
 //chat function that prompts for chat messages one after another until exit entered
 var chat = function (username, password) {
-  my_inter = setInterval(function(){post(host + '/termchat/get', getchat, '');}, 1000);
+  my_inter = setInterval(function(){post(host + '/termchat/get', getchat, '');}, 500);
   prompt.message = '';
   prompt.delimiter = '';
   prompt.get({properties: {':': {'hidden': true}}}, function (err, result) {

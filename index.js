@@ -39,7 +39,6 @@ prompt.get(['username', 'roomname', 'password'], function (err, result) {
   password = result.password;
 
   //POST request for joining room
-  my_inter = setInterval(function(){post(host + '/termchat/get', getchat, '');}, 1000);
   post(host + '/termchat/join', join_room, '');
 });
 
@@ -69,12 +68,16 @@ getchat = function(err,res,body) {
 
 //chat function that prompts for chat messages one after another until exit entered
 var chat = function (username, password) {
+  my_inter = setInterval(function(){post(host + '/termchat/get', getchat, '');}, 1000);
   prompt.message = '';
   prompt.delimiter = '';
   prompt.get({properties: {':': {'hidden': true}}}, function (err, result) {
-    if(result[':'] == 'exit') {console.log('Exiting chatroom'); clearInterval(my_inter); return 0;};
-    var send_msg = result[':'];
-    post(host + '/termchat/chat', function(err,res,body) {chat(username, password);}, send_msg);
+    clearInterval(my_inter);
+    prompt.get(['Enter chat message: '], function (err, result) {
+      if(result['Enter chat message: '] == 'exit') {console.log('Exiting chatroom'); return 0;};
+      var send_msg = result['Enter chat message: '];
+      post(host + '/termchat/chat', function(err, res, body) {chat(username, password)}, send_msg);
+    });
   });
 };
 
@@ -83,12 +86,11 @@ join_room = function(err,res,body) {
   if(!err && res.statusCode == 200){
     if(res.body == "Wrong password") {
       console.log(res.body); //error message
-      clearInterval(my_inter);
       return 0;
     } else {
-      console.log(res.body); //Join room message
+      console.log(res.body); //Join room Message
       chat(username, password);
-    };
+    }
   };
 }
 

@@ -13,7 +13,7 @@
   "dependencies": {
     "firebase": "^1.0.21",
     "node-notifier": "^3.2.1",
-    "prompt": "^0.2.14",
+    "prompt": "^0.2.14"
   },
   "author": "",
   "license": "ISC",

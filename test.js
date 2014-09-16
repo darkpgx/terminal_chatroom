@@ -1,8 +1,4 @@
-var Notification = require('node-notifier');
+var Firebase = require('firebase');
+var fb = new Firebase('https://dazzling-inferno-9961.firebaseio.com/');
+fb.remove(function(error){process.exit()});
 
-var notifier = new Notification();
-notifier.notify({
-  title: 'My awesome title',
-  sound: 'Hero',
-  message: 'Hello from node, Mr. User!'
-});

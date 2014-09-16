@@ -4,19 +4,20 @@ console.log("Starting Terminal Chat");
 //The code for terminal chat starts here
 
 //Required modules
-var http = require('http');
 var prompt = require('prompt');
-var request = require('request');
 prompt.start();
 var Notification = require('node-notifier');
 var notifier = new Notification();
+var Firebase = require('firebase');
+var fb = new Firebase('https://dazzling-inferno-9961.firebaseio.com/');
 //End required modules
 
 //Set up global vars to strings
 var username = '',
     roomname = '',
     password = '',
-    host = 'http://larryschatroom.herokuapp.com',
+    user_id = 2,
+    chat_array = [],
     my_inter,
     message_counter = 0;
 //End set up global vars
@@ -38,59 +39,89 @@ prompt.get(['username', 'roomname', 'password'], function (err, result) {
   roomname = result.roomname;
   password = result.password;
 
-  //POST request for joining room
-  post(host + '/termchat/join', join_room, '');
+  //join or create
+  join(username, password, roomname);
 });
 
-//Function to POST
-var post = function(url, action, send_msg) {
-  request.post(url, {json: {"username" : username, "roomname" : roomname, "password" : password, "send_msg" : send_msg}},
-      action);
-};
-
 //request for existing messages and prints on console
-getchat = function(err,res,body) {
-  if (res.body == "end") {return 0;};
-  var arr = res.body;
+var print_chat = function(arr) {
   if (arr.length < 1) {return 0;}
   for (var j = message_counter; j< arr.length; j++) {
     if (arr[j]["username"] !== username && message_counter !== 0){
       notifier.notify({
-        title: 'My awesome title',
-        message: arr[j]["username"] + ": " + arr[j]["send_msg"],
+        title: 'Terminal message received',
+        message: arr[j]["username"] + ": " + arr[j]["msg"],
         sound: 'Funk'
       });
-      console.log('' + arr[j]["username"] + ": " + arr[j]["send_msg"]);
+      console.log('' + arr[j]["username"] + ": " + arr[j]["msg"]);
     };
   };
   message_counter = arr.length;
 };
 
-//chat function that prompts for chat messages one after another until exit entered
-var chat = function (username, password) {
-  my_inter = setInterval(function(){post(host + '/termchat/get', getchat, '');}, 500);
+//Chat function
+var chat = function(username, password, roomname, user_id) {
+  my_inter = setInterval(function(){print_chat(chat_array);}, 500);
   prompt.message = '';
   prompt.delimiter = '';
   prompt.get({properties: {':': {'hidden': true}}}, function (err, result) {
     clearInterval(my_inter);
     prompt.get(['Enter chat message: '], function (err, result) {
-      if(result['Enter chat message: '] == 'exit') {console.log('Exiting chatroom'); return 0;};
-      var send_msg = result['Enter chat message: '];
-      post(host + '/termchat/chat', function(err, res, body) {chat(username, password)}, send_msg);
+      if(result['Enter chat message: '] == 'exit') {
+        fb.child(roomname).child(password).child(user_id).update({msg: username + " has exit the room"}, 
+          function(){process.exit()});
+      } else if(result['Enter chat message: '] == 'list') {
+        list();
+        chat(username, password, roomname, user_id);
+      } else {
+        var msg = result['Enter chat message: '];
+        fb.child(roomname).child(password).child(user_id).update({msg: msg});
+        chat(username, password, roomname, user_id);
+      }
     });
   });
 };
 
-//joins a room then go to chat; if room does not eixist, create a new one
-join_room = function(err,res,body) {
-  if(!err && res.statusCode == 200){
-    if(res.body == "Wrong password") {
-      console.log(res.body); //error message
-      return 0;
-    } else {
-      console.log(res.body); //Join room Message
-      chat(username, password);
+//join function
+var join = function(username, password, roomname) {
+  fb.child(roomname).once('value', function(dat){
+    if (dat.val() == null || password in dat.val()) {
+      joining();
+      //fb.onDisconnect().update();
     }
-  };
-}
+    else if(!(password in dat.val())) {
+      console.log('Wrong Password');
+      process.exit();
+    }
+  });
+};
 
+var joining = function () {
+  fb.child(roomname).child(password).once('value', function(dat){
+    user_id = dat.numChildren() + 2;
+    console.log("Join room: " + roomname + " with password: " + password);
+    fb.child(roomname).child(password).child(user_id).update({
+      username: username, msg: username + " has joined room: " + roomname
+    });
+    fb.child(roomname).child(password).child('users').child(user_id).update({username: username});
+    fb.child(roomname).child(password).child('users').child(user_id).onDisconnect().update({username: null});
+
+    //fix to include joining in message
+    fb.child(roomname).child(password).on('child_changed', function(current, oldName){
+      chat_array.push({username: current.val().username, msg: current.val().msg});
+    });
+    chat(username, password, roomname, user_id);
+  });
+};
+
+var list = function(){
+  fb.child(roomname).child(password).child('users').once('value', function(dat){
+    var users = dat.val();
+    console.log("Users: ");
+    for(var key in users) {
+      console.log(key);
+      console.log(users[key]['username'] +', ');
+    };
+    console.log("are currently in the room");
+  });
+};

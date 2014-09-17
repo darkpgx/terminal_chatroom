@@ -15,7 +15,7 @@ var fb = new Firebase('https://dazzling-inferno-9961.firebaseio.com/');
 
 //Set up global vars to strings
 var username = '',
-    roomname = '',
+    userinput = '',
     password = '',
     user_id = 2,
     chat_array = [],
@@ -32,12 +32,12 @@ function onErr(err) {
 
 var room_prompt = function(){
   prompt.get(['roomname'], function (err, result){
-    roomname = result.roomname;
+    userinput = result.roomname;
     if(err) {return onErr(err);};
-    if(roomname == '') {console.log('Roomname cannot be empty.'); room_prompt();}
-    else if(roomname == '/listroom') {listroom();}
-    else if(roomname == 'exit') {process.exit();}
-    else{pass_prompt(roomname);};
+    if(userinput == '') {console.log('Roomname cannot be empty.'); room_prompt();}
+    else if(userinput == '/listroom') {listroom();}
+    else if(userinput == 'exit') {process.exit();}
+    else{pass_prompt(userinput);};
   });
 }
 
@@ -60,7 +60,7 @@ var print_chat = function(arr) {
 };
 
 //Chat function
-var chat = function(username, password, roomname, user_id) {
+var chat = function(username, password, userinput, user_id) {
   my_inter = setInterval(function(){print_chat(chat_array);}, 500);
   prompt.message = '';
   prompt.delimiter = '';
@@ -68,43 +68,43 @@ var chat = function(username, password, roomname, user_id) {
     clearInterval(my_inter);
     prompt.get(['Enter chat message: '], function (err, result) {
       if(result['Enter chat message: '] == 'exit') {
-        fb.child(roomname).child(password).child(user_id).update({msg: username + " has exit the room"}, 
+        fb.child(userinput).child(password).child(user_id).update({msg: username + " has exit the room"}, 
           function(){process.exit()});
       } else if(result['Enter chat message: '] == '/list') {
         list();
-        chat(username, password, roomname, user_id);
+        chat(username, password, userinput, user_id);
       } else {
         var msg = result['Enter chat message: '];
-        fb.child(roomname).child(password).child(user_id).update({msg: msg});
-        chat(username, password, roomname, user_id);
+        fb.child(userinput).child(password).child(user_id).update({msg: msg});
+        chat(username, password, userinput, user_id);
       }
     });
   });
 };
 
-var joining = function () {
-  fb.child(roomname).child(password).once('value', function(dat){
+var joinroom = function () {
+  fb.child(userinput).child(password).once('value', function(dat){
     user_id = dat.numChildren() + 2;
-    if(password == "publicpasscode123g") {console.log("Join public room: " + roomname);}
-    else{console.log("Join room: " + roomname + " with password: " + password);};
-    fb.child(roomname).child(password).child(user_id).update({
-      username: username, msg: username + " has joined room: " + roomname
+    if(password == "publicpasscode123g") {console.log("Join public room: " + userinput);}
+    else{console.log("Join room: " + userinput + " with password: " + password);};
+    fb.child(userinput).child(password).child(user_id).update({
+      username: username, msg: username + " has joined room: " + userinput
     });
-    fb.child(roomname).child(password).child('users').child(user_id).update({username: username});
-    fb.child(roomname).child(password).child('users').child(user_id).onDisconnect().update({username: null});
+    fb.child(userinput).child(password).child('users').child(user_id).update({username: username});
+    fb.child(userinput).child(password).child('users').child(user_id).onDisconnect().update({username: null});
 
-    fb.child(roomname).child(password).on('child_added', function(current, oldName){
+    fb.child(userinput).child(password).on('child_added', function(current, oldName){
       if('msg' in current.val()){chat_array.push({username: current.val().username, msg: current.val().msg});};
     });
-    fb.child(roomname).child(password).on('child_changed', function(current, oldName){
+    fb.child(userinput).child(password).on('child_changed', function(current, oldName){
       if('msg' in current.val()){chat_array.push({username: current.val().username, msg: current.val().msg});};
     });
-    chat(username, password, roomname, user_id);
+    chat(username, password, userinput, user_id);
   });
 };
 
 var list = function(){
-  fb.child(roomname).child(password).child('users').once('value', function(dat){
+  fb.child(userinput).child(password).child('users').once('value', function(dat){
     var users = dat.val();
     console.log("Users: ");
     for(var key in users) {
@@ -126,43 +126,43 @@ var listroom = function(){
   });
 };
 
-var pass_prompt = function(roomname){
+var pass_prompt = function(userinput){
   prompt.get(['password'], function(err, result){
     if(err) {return onErr(err);};
     if(result.password == 'exit') {process.exit();};
     password = result.password;
     if(password == ''){password = 'publicpasscode123g';};
     fb.once('value', function(snapshot){
-      if(!(roomname in snapshot.val())){user_prompt(roomname, password);}
+      if(!(userinput in snapshot.val())){user_prompt(userinput, password);}
       else{
-        fb.child(roomname).once('value', function(snapshot){
+        fb.child(userinput).once('value', function(snapshot){
           if (password == 'exit'){process.exit();}
           else if(!(password in snapshot.val())){
             console.log('Wrong password');
-            pass_prompt(roomname);
-          } else {user_prompt(roomname, password);};
+            pass_prompt(userinput);
+          } else {user_prompt(userinput, password);};
         });
       };
     });
   });
 };
 
-var user_prompt = function(roomname, password){
+var user_prompt = function(userinput, password){
   prompt.get(['username'], function(err, result){
     if(err){return onErr(err);};
     username = result.username;
     if(username == '') {console.log('Username cannot be empty.'); user_prompt();}
     else if(username == 'exit'){process.exit();}
     else{
-      fb.child(roomname).child(password).once('value', function(snapshot){
-        if(snapshot.val() == null){joining();}
-        else if(!('users' in snapshot.val())){joining();}
+      fb.child(userinput).child(password).once('value', function(snapshot){
+        if(snapshot.val() == null){joinroom();}
+        else if(!('users' in snapshot.val())){joinroom();}
         else {
           for(key in snapshot.val()['users']){
             if (username == snapshot.val()['users'][key]['username']){
               console.log('Username: ' + username + ' already in use, choose differnt one ');
-              user_prompt(roomname, password);
-            } else{joining();};
+              user_prompt(userinput, password);
+            } else{joinroom();};
           };
         };
       });

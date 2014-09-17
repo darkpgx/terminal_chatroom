@@ -70,7 +70,7 @@ var chat = function(username, password, roomname, user_id) {
       if(result['Enter chat message: '] == 'exit') {
         fb.child(roomname).child(password).child(user_id).update({msg: username + " has exit the room"}, 
           function(){process.exit()});
-      } else if(result['Enter chat message: '] == 'list') {
+      } else if(result['Enter chat message: '] == '/list') {
         list();
         chat(username, password, roomname, user_id);
       } else {
@@ -106,9 +106,11 @@ var joining = function () {
     fb.child(roomname).child(password).child('users').child(user_id).update({username: username});
     fb.child(roomname).child(password).child('users').child(user_id).onDisconnect().update({username: null});
 
-    //fix to include joining in message
+    fb.child(roomname).child(password).on('child_added', function(current, oldName){
+      if('msg' in current.val()){chat_array.push({username: current.val().username, msg: current.val().msg});};
+    });
     fb.child(roomname).child(password).on('child_changed', function(current, oldName){
-      chat_array.push({username: current.val().username, msg: current.val().msg});
+      if('msg' in current.val()){chat_array.push({username: current.val().username, msg: current.val().msg});};
     });
     chat(username, password, roomname, user_id);
   });
@@ -119,7 +121,6 @@ var list = function(){
     var users = dat.val();
     console.log("Users: ");
     for(var key in users) {
-      console.log(key);
       console.log(users[key]['username'] +', ');
     };
     console.log("are currently in the room");

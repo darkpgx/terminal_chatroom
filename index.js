@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 //Starting Message.
 console.log("Starting Terminal Chat");
 

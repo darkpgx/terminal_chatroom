@@ -30,19 +30,18 @@ function onErr(err) {
 };
 //End Error Handler
 
-//Prompt for credentials
-prompt.get(['username', 'roomname', 'password'], function (err, result) {
-  if(err) {return onErr(err);};
-  console.log('  username: ' + result.username); //display user entered credentials
-  console.log('  roomname: ' + result.roomname);
-  console.log('  password: ' + result.password);
-  username = result.username;
-  roomname = result.roomname;
-  password = result.password;
+var room_prompt = function(){
+  prompt.get(['roomname'], function (err, result){
+    roomname = result.roomname;
+    if(err) {return onErr(err);};
+    if(roomname == '') {console.log('Roomname cannot be empty.'); room_prompt();}
+    else if(roomname == '/listroom') {listroom();}
+    else if(roomname == 'exit') {process.exit();}
+    else{pass_prompt(roomname);};
+  });
+}
 
-  //join or create
-  join(username, password, roomname);
-});
+room_prompt();
 
 //request for existing messages and prints on console
 var print_chat = function(arr) {
@@ -83,24 +82,11 @@ var chat = function(username, password, roomname, user_id) {
   });
 };
 
-//join function
-var join = function(username, password, roomname) {
-  fb.child(roomname).once('value', function(dat){
-    if (dat.val() == null || password in dat.val()) {
-      joining();
-      //fb.onDisconnect().update();
-    }
-    else if(!(password in dat.val())) {
-      console.log('Wrong Password');
-      process.exit();
-    }
-  });
-};
-
 var joining = function () {
   fb.child(roomname).child(password).once('value', function(dat){
     user_id = dat.numChildren() + 2;
-    console.log("Join room: " + roomname + " with password: " + password);
+    if(password == "publicpasscode123g") {console.log("Join public room: " + roomname);}
+    else{console.log("Join room: " + roomname + " with password: " + password);};
     fb.child(roomname).child(password).child(user_id).update({
       username: username, msg: username + " has joined room: " + roomname
     });
@@ -125,5 +111,61 @@ var list = function(){
       console.log(users[key]['username'] +', ');
     };
     console.log("are currently in the room");
+  });
+};
+
+var listroom = function(){
+  fb.once('value', function(snapshot){
+    console.log('Rooms: ');
+    for(key in snapshot.val()){
+      if('publicpasscode123g' in snapshot.val()[key]){console.log(key + '(public room), ');}
+      else{console.log(key + ', ');};
+    };
+    console.log('are available.');
+    room_prompt();
+  });
+};
+
+var pass_prompt = function(roomname){
+  prompt.get(['password'], function(err, result){
+    if(err) {return onErr(err);};
+    if(result.password == 'exit') {process.exit();};
+    password = result.password;
+    if(password == ''){password = 'publicpasscode123g';};
+    fb.once('value', function(snapshot){
+      if(!(roomname in snapshot.val())){user_prompt(roomname, password);}
+      else{
+        fb.child(roomname).once('value', function(snapshot){
+          if (password == 'exit'){process.exit();}
+          else if(!(password in snapshot.val())){
+            console.log('Wrong password');
+            pass_prompt(roomname);
+          } else {user_prompt(roomname, password);};
+        });
+      };
+    });
+  });
+};
+
+var user_prompt = function(roomname, password){
+  prompt.get(['username'], function(err, result){
+    if(err){return onErr(err);};
+    username = result.username;
+    if(username == '') {console.log('Username cannot be empty.'); user_prompt();}
+    else if(username == 'exit'){process.exit();}
+    else{
+      fb.child(roomname).child(password).once('value', function(snapshot){
+        if(snapshot.val() == null){joining();}
+        else if(!('users' in snapshot.val())){joining();}
+        else {
+          for(key in snapshot.val()['users']){
+            if (username == snapshot.val()['users'][key]['username']){
+              console.log('Username: ' + username + ' already in use, choose differnt one ');
+              user_prompt(roomname, password);
+            } else{joining();};
+          };
+        };
+      });
+    };
   });
 };

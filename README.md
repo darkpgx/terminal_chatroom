@@ -27,15 +27,17 @@ Once node.js and npm is installed in terminal, you can download nullchat using n
 
 After installing nullchat and its dependencies, you can start chatting on the terminal.  
 Start nullchat by simply typing "nullchat."
-  - This will prompt the user to enter roomname.
+  - Type "/help" to display all available commands during any user inputs
 
-    - Type "exit" to end nullchat. 
+  - First you will be prompted to enter roomname.
+
+    - Type "/exit" to end nullchat. 
     - Type "/listroom" to list all the available rooms. 
     - Type existing or new roomname to enter or create a chat room. 
 
   - Then the user will be prompted to enter the password.
 
-    - Type "exit" to end nullchat.
+    - Type "/exit" to end nullchat.
     - If the room is public, enter by ommiting the password(simply hit enter or return when prompted).
     - If the room is not public, a password is required, which can be obtained from the user who created the roomname.
     - If you have created the room (you do this by entering a roomname that does not exist in /listroom",
@@ -43,7 +45,7 @@ Start nullchat by simply typing "nullchat."
 
   - Choose a username when prompted
 
-    - Type "exit" to end nullchat.
+    - Type "/exit" to end nullchat.
     - Enter a desired username to check for availability.
     - If the username is not available, a message will show and ask you to choose a different username.
     - If the user name is available, a message will notify you that you have joined the roomname.
@@ -53,7 +55,7 @@ Start nullchat by simply typing "nullchat."
     - Once in the room chat messages sent by other users will appear on your console.
     - Hit return or enter once to enter chatmode.
     - Chat mode stops incoming chat messages while you type your message.
-    - In chat mode, type "exit" to end nullchat.
+    - In chat mode, type "/exit" to end nullchat.
     - In chat mode, type "/list" to see all the users that are currently in the roomname.
     - In chat mode, type your message and hit enter or return to send it to all other users currently in the room.
 

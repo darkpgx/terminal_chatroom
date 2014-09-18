@@ -29,15 +29,20 @@ function onErr(err) {
   return 1;
 };
 //End Error Handler
+function help(){
+  console.log('Type "/help" to view all available commands.');
+  console.log('Type "/exit" to end nullchat.');
+};
 
 //function to prompt user for roomname
 var room_prompt = function(){
   prompt.get(['roomname'], function (err, result){
     userinput = result.roomname;
     if(err) {return onErr(err);};
-    if(userinput == '') {console.log('Roomname cannot be empty.'); room_prompt();}
+    if(userinput == '/help'){help(); console.log('Type "/listroom" to list all available rooms.'); room_prompt();}
+    else if(userinput == '') {console.log('Roomname cannot be empty.'); room_prompt();}
     else if(userinput == '/listroom') {listroom();}
-    else if(userinput == 'exit') {process.exit();}
+    else if(userinput == '/exit') {process.exit();}
     else{pass_prompt(userinput);};
   });
 }
@@ -68,8 +73,10 @@ var chat = function(username, password, userinput, user_id) {
   prompt.get({properties: {':': {'hidden': true}}}, function (err, result) {
     clearInterval(my_inter);
     prompt.get(['Enter chat message: '], function (err, result) {
-      if(result['Enter chat message: '] == 'exit') {
-        fb.child(userinput).child(password).child(user_id).update({msg: username + " has exit the room"}, 
+      if(result['Enter chat message: '] == '/help') {
+        help(); console.log('Type "/list" to list all users in the room.'); chat(username, password, userinput, user_id);
+      } else if(result['Enter chat message: '] == '/exit') {
+        fb.child(userinput).child(password).child(user_id).update({msg: username + " has /exit the room"}, 
           function(){process.exit()});
       } else if(result['Enter chat message: '] == '/list') {
         list();
@@ -129,22 +136,30 @@ var listroom = function(){
 
 var pass_prompt = function(userinput){
   prompt.get(['password'], function(err, result){
-    if(err) {return onErr(err);};
-    if(result.password == 'exit') {process.exit();};
     password = result.password;
-    if(password == ''){password = 'publicpasscode123g';};
-    fb.once('value', function(snapshot){
-      if(!(userinput in snapshot.val())){user_prompt(userinput, password);}
-      else{
-        fb.child(userinput).once('value', function(snapshot){
-          if (password == 'exit'){process.exit();}
-          else if(!(password in snapshot.val())){
-            console.log('Wrong password');
-            pass_prompt(userinput);
-          } else {user_prompt(userinput, password);};
-        });
-      };
-    });
+    if(password == ''){password = 'publicpasscode123g'};
+    if(err) {return onErr(err);};
+    if(result.password == '/help') {
+      help(); console.log("Public room without password is created by omitting password.");
+      pass_prompt(userinput);
+    } else if(result.password == '/exit') {process.exit();}
+    else{
+      fb.once('value', function(snapshot){
+        if(!(userinput in snapshot.val())){user_prompt(userinput, password);}
+        else{
+          fb.child(userinput).once('value', function(snapshot){
+            if(password == '/help') {
+              help(); console.log("Public room without password is created by omitting password.");
+              pass_prompt(userinput);
+            } else if (password == '/exit'){process.exit();}
+            else if(!(password in snapshot.val())){
+              console.log('Wrong password');
+              pass_prompt(userinput);
+            } else {user_prompt(userinput, password);};
+          });
+        };
+      });
+    };
   });
 };
 
@@ -152,8 +167,9 @@ var user_prompt = function(userinput, password){
   prompt.get(['username'], function(err, result){
     if(err){return onErr(err);};
     username = result.username;
-    if(username == '') {console.log('Username cannot be empty.'); user_prompt();}
-    else if(username == 'exit'){process.exit();}
+    if(username == '/help') {help(); user_prompt(userinput, password);}
+    else if(username == '') {console.log('Username cannot be empty.'); user_prompt();}
+    else if(username == '/exit'){process.exit();}
     else{
       fb.child(userinput).child(password).once('value', function(snapshot){
         if(snapshot.val() == null){joinroom();}

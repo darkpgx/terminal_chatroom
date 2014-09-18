@@ -30,6 +30,7 @@ function onErr(err) {
 };
 //End Error Handler
 
+//function to prompt user for roomname
 var room_prompt = function(){
   prompt.get(['roomname'], function (err, result){
     userinput = result.roomname;

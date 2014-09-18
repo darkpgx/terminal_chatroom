@@ -27,13 +27,13 @@ Once node.js and npm is installed in terminal, you can download nullchat using n
 
 After installing nullchat and its dependencies, you can start chatting on the terminal.  
 Start nullchat by simply typing "nullchat."
-  1. This will prompt the user to enter roomname.
+  - This will prompt the user to enter roomname.
 
     - Type "exit" to end nullchat. 
     - Type "/listroom" to list all the available rooms. 
     - Type existing or new roomname to enter or create a chat room. 
 
-  2. Then the user will be prompted to enter the password.
+  - Then the user will be prompted to enter the password.
 
     - Type "exit" to end nullchat.
     - If the room is public, enter by ommiting the password(simply hit enter or return when prompted).
@@ -41,14 +41,14 @@ Start nullchat by simply typing "nullchat."
     - If you have created the room (you do this by entering a roomname that does not exist in /listroom",
     you can choose to make it public by ommiting the password or not public by entering a password.
 
-  3. Choose a username when prompted
+  - Choose a username when prompted
 
     - Type "exit" to end nullchat.
     - Enter a desired username to check for availability.
     - If the username is not available, a message will show and ask you to choose a different username.
     - If the user name is available, a message will notify you that you have joined the roomname.
     
-  4. Start chatting
+  - Start chatting
   
     - Once in the room chat messages sent by other users will appear on your console.
     - Hit return or enter once to enter chatmode.
@@ -57,6 +57,6 @@ Start nullchat by simply typing "nullchat."
     - In chat mode, type "/list" to see all the users that are currently in the roomname.
     - In chat mode, type your message and hit enter or return to send it to all other users currently in the room.
 
-  5. Chat with fellow programmers and friends using terminal and enjoy the simplicity of nullchat!!!
+  - _Chat with fellow programmers and friends using terminal and enjoy the simplicity of **nullchat**!!!_
 
 
